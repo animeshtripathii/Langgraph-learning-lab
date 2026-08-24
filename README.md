@@ -25,6 +25,8 @@ I am using this repo to:
 
 - `Workflows/` - Workflow experiments and implementations
 - `package.json` - Project metadata, dependencies, and scripts
+- `.github/workflows/ci.yml` - CI pipeline for push and pull request checks
+- `COMMIT_CONVENTION.md` - Commit message style guide
 
 ## Quick Start
 
