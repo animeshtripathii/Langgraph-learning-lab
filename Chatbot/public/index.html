@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LangGraph Chatbot Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <p class="eyebrow">LANGGRAPH LEARNING LAB</p>
+        <div class="heading-row"><div><h1>Chatbot playground</h1><p class="subtitle">Test state, memory, and conversational flow.</p></div><span class="status"><i></i> Ready</span></div>
+      </header>
+      <section class="chat-panel" aria-label="Chat conversation">
+        <div id="messages" class="messages"><article class="message bot"><span class="avatar">AI</span><div><small>LangGraph assistant</small><p>Hello. Ask me anything to test the chatbot workflow.</p></div></article></div>
+        <form id="chat-form"><label class="sr-only" for="prompt">Message</label><textarea id="prompt" rows="1" placeholder="Ask something..." required></textarea><button type="submit">Send <span>↗</span></button></form>
+        <p class="hint">Enter to send · Shift + Enter for a new line</p>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

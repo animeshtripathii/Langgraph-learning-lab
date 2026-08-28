@@ -189,6 +189,7 @@ while (true) {
     command === "bye" ||
     command === "quit"
   ) {
+    // console.log(await chatbot.getState(config))
     console.log("Bot: Goodbye!");
     break;
   }
@@ -208,6 +209,7 @@ while (true) {
     result.messages[result.messages.length - 1];
 
   console.log("Bot:", lastMessage.content);
+
 }
 
 
