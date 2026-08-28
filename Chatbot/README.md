@@ -12,6 +12,28 @@ This folder contains a command-line chatbot and a simple browser frontend built 
 
 The browser version is deployment-ready for Vercel. The API key stays on the serverless function and is never exposed in frontend code.
 
+## My LangGraph Learning Journey
+
+I am building this chatbot to learn LangGraph concepts through practice instead of only reading about them.
+
+### August 28, 2026 - Started Persistence
+
+Today I started learning **persistence in LangGraph**. I am learning how a graph saves its state and continues a conversation using checkpoints and a `thread_id`.
+
+This chatbot uses `MemorySaver` to practice the concept. The current checkpoints are stored in memory while the application is running.
+
+### Topics I Plan To Learn Next
+
+- Memory and long-term conversation history
+- RAG (Retrieval-Augmented Generation)
+- Human-in-the-loop workflows
+- Streaming responses
+- Conditional routing and branching graphs
+- Tool calling and external API integration
+- Multi-agent workflows
+- Durable database-backed persistence
+- Graph debugging, tracing, and evaluation
+
 ## Web App Files
 
 - `public/index.html` - Browser chat interface
