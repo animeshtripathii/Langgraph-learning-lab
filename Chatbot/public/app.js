@@ -3,6 +3,10 @@ const prompt = document.querySelector("#prompt");
 const messagesElement = document.querySelector("#messages");
 const history = [];
 
+function scrollMessagesToBottom() {
+  messagesElement.scrollTop = messagesElement.scrollHeight;
+}
+
 function addMessage(role, content = "") {
   const article = document.createElement("article");
   article.className = `message ${role}`;
@@ -10,7 +14,7 @@ function addMessage(role, content = "") {
   const paragraph = article.querySelector("p");
   paragraph.textContent = content;
   messagesElement.append(article);
-  messagesElement.scrollTop = messagesElement.scrollHeight;
+  scrollMessagesToBottom();
   return paragraph;
 }
 
@@ -50,7 +54,7 @@ form.addEventListener("submit", async (event) => {
       const chunk = decoder.decode(value, { stream: true });
       assistantMessage += chunk;
       assistantParagraph.textContent = assistantMessage;
-      messagesElement.scrollTop = messagesElement.scrollHeight;
+      scrollMessagesToBottom();
     }
 
     history.push({ role: "assistant", content: assistantMessage });
