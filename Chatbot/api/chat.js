@@ -46,16 +46,21 @@ function normalizeText(content) {
 
 export default async function handler(request, response) {
   if (request.method !== "POST") {
-    return response.status(405).json({ error: "Method not allowed" });
+    response.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
   if (!process.env.GEMINI_API_KEY) {
-    return response.status(500).json({ error: "GEMINI_API_KEY is not configured." });
+    response.status(500).json({ error: "GEMINI_API_KEY is not configured." });
+    return;
   }
 
-  const { messages, threadId = "web-user-1" } = request.body || {};
+  const body = request.body || {};
+  const { messages, threadId = "web-user-1" } = body;
+
   if (!Array.isArray(messages) || messages.length === 0) {
-    return response.status(400).json({ error: "At least one message is required." });
+    response.status(400).json({ error: "At least one message is required." });
+    return;
   }
 
   try {
@@ -67,31 +72,20 @@ export default async function handler(request, response) {
       },
     );
 
-    const encoder = new TextEncoder();
-    const body = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const [messageChunk] of stream) {
-            const chunkText = normalizeText(messageChunk.content);
-            if (chunkText) {
-              controller.enqueue(encoder.encode(chunkText));
-            }
-          }
-          controller.close();
-        } catch (error) {
-          console.error(error);
-          controller.error(error);
-        }
-      },
-    });
+    response.status(200);
+    response.setHeader("Content-Type", "text/plain; charset=utf-8");
+    response.setHeader("Cache-Control", "no-cache, no-transform");
 
-    return new Response(body, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    });
+    for await (const [messageChunk] of stream) {
+      const chunkText = normalizeText(messageChunk.content);
+      if (chunkText) {
+        response.write(chunkText);
+      }
+    }
+
+    response.end();
   } catch (error) {
     console.error(error);
-    return response.status(500).json({ error: "The chatbot could not process that message." });
+    response.status(500).json({ error: "The chatbot could not process that message." });
   }
 }
