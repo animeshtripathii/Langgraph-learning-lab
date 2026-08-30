@@ -3,13 +3,15 @@ const prompt = document.querySelector("#prompt");
 const messagesElement = document.querySelector("#messages");
 const history = [];
 
-function addMessage(role, content) {
+function addMessage(role, content = "") {
   const article = document.createElement("article");
   article.className = `message ${role}`;
   article.innerHTML = `<span class="avatar">${role === "user" ? "YOU" : "AI"}</span><div><small>${role === "user" ? "You" : "LangGraph assistant"}</small><p></p></div>`;
-  article.querySelector("p").textContent = content;
+  const paragraph = article.querySelector("p");
+  paragraph.textContent = content;
   messagesElement.append(article);
   messagesElement.scrollTop = messagesElement.scrollHeight;
+  return paragraph;
 }
 
 form.addEventListener("submit", async (event) => {
@@ -19,6 +21,7 @@ form.addEventListener("submit", async (event) => {
   prompt.value = "";
   history.push({ role: "user", content });
   addMessage("user", content);
+
   const button = form.querySelector("button");
   button.disabled = true;
   button.textContent = "...";
@@ -29,13 +32,34 @@ form.addEventListener("submit", async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: history, threadId: "web-user-1" }),
     });
-    const data = await result.json();
-    if (!result.ok) throw new Error(data.error || "Request failed");
-    addMessage("assistant", data.message);
-    history.push({ role: "assistant", content: data.message });
+
+    if (!result.ok) {
+      const errorText = await result.text();
+      throw new Error(errorText || "Request failed");
+    }
+
+    const reader = result.body.getReader();
+    const decoder = new TextDecoder();
+    const assistantParagraph = addMessage("assistant");
+    let assistantMessage = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      assistantMessage += chunk;
+      assistantParagraph.textContent = assistantMessage;
+      messagesElement.scrollTop = messagesElement.scrollHeight;
+    }
+
+    history.push({ role: "assistant", content: assistantMessage });
   } catch (error) {
-    addMessage("assistant", `Error: ${error.message}`);
-    history.pop();
+    const errorParagraph = addMessage("assistant", `Error: ${error.message}`);
+    if (history[history.length - 1]?.role === "assistant") {
+      history.pop();
+    }
+    errorParagraph.scrollIntoView({ behavior: "instant", block: "end" });
   } finally {
     button.disabled = false;
     button.innerHTML = "Send <span>↗</span>";

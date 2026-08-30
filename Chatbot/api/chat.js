@@ -30,6 +30,20 @@ function toMessage(message) {
   return new HumanMessage(message.content);
 }
 
+function normalizeText(content) {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (typeof part === "string" ? part : part?.text || ""))
+      .join("");
+  }
+
+  return String(content ?? "");
+}
+
 export default async function handler(request, response) {
   if (request.method !== "POST") {
     return response.status(405).json({ error: "Method not allowed" });
@@ -45,12 +59,37 @@ export default async function handler(request, response) {
   }
 
   try {
-    const result = await workflow.invoke(
+    const stream = await workflow.stream(
       { messages: messages.map(toMessage) },
-      { configurable: { thread_id: String(threadId) } },
+      {
+        configurable: { thread_id: String(threadId) },
+        streamMode: "messages",
+      },
     );
-    const lastMessage = result.messages[result.messages.length - 1];
-    return response.status(200).json({ message: lastMessage.content });
+
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const [messageChunk] of stream) {
+            const chunkText = normalizeText(messageChunk.content);
+            if (chunkText) {
+              controller.enqueue(encoder.encode(chunkText));
+            }
+          }
+          controller.close();
+        } catch (error) {
+          console.error(error);
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(body, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
   } catch (error) {
     console.error(error);
     return response.status(500).json({ error: "The chatbot could not process that message." });
