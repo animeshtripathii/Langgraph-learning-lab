@@ -1,6 +1,7 @@
-import { Annotation, END, START, StateGraph, messagesStateReducer, MemorySaver } from "@langchain/langgraph";
+import { Annotation, END, START, StateGraph, messagesStateReducer } from "@langchain/langgraph";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { saveConversation } from "./_db.js";
 
 const chatState = Annotation.Root({
   messages: Annotation({
@@ -9,7 +10,6 @@ const chatState = Annotation.Root({
   }),
 });
 
-const memory = new MemorySaver();
 const workflow = new StateGraph(chatState)
   .addNode("chat", async (state) => {
     const llm = new ChatGoogleGenerativeAI({
@@ -22,7 +22,7 @@ const workflow = new StateGraph(chatState)
   })
   .addEdge(START, "chat")
   .addEdge("chat", END)
-  .compile({ checkpointer: memory });
+  .compile();
 
 function toMessage(message) {
   if (message.role === "assistant") return new AIMessage(message.content);
@@ -56,10 +56,10 @@ export default async function handler(request, response) {
   }
 
   const body = request.body || {};
-  const { messages, threadId = "web-user-1" } = body;
+  const { messages, conversationId, title } = body;
 
-  if (!Array.isArray(messages) || messages.length === 0) {
-    response.status(400).json({ error: "At least one message is required." });
+  if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
+    response.status(400).json({ error: "conversationId and at least one message are required." });
     return;
   }
 
@@ -76,13 +76,23 @@ export default async function handler(request, response) {
     response.setHeader("Content-Type", "text/plain; charset=utf-8");
     response.setHeader("Cache-Control", "no-cache, no-transform");
 
+    let assistantMessage = "";
     for await (const [messageChunk] of stream) {
       const chunkText = normalizeText(messageChunk.content);
       if (chunkText) {
+        assistantMessage += chunkText;
         response.write(chunkText);
       }
     }
 
+    await saveConversation({
+      id: String(conversationId),
+      title: String(title || messages.find((message) => message.role === "user")?.content || "New conversation").slice(0, 80),
+      messages: [
+        ...messages,
+        { role: "assistant", content: assistantMessage },
+      ],
+    });
     response.end();
   } catch (error) {
     console.error(error);
