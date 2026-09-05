@@ -10,6 +10,11 @@ const chatState = Annotation.Root({
   }),
 });
 
+const responseStyle = `You are a helpful programming assistant. Format every answer as clear Markdown.
+Use a short heading when useful, paragraphs for explanations, numbered or bulleted lists for steps,
+and fenced code blocks with the correct language tag for code. Explain code briefly after the block.
+Do not put the entire answer in one long paragraph.`;
+
 const workflow = new StateGraph(chatState)
   .addNode("chat", async (state) => {
     const llm = new ChatGoogleGenerativeAI({
@@ -72,7 +77,7 @@ export default async function handler(request, response) {
 
   try {
     const stream = await workflow.stream(
-      { messages: messages.map(toMessage) },
+      { messages: [new SystemMessage(responseStyle), ...messages.map(toMessage)] },
       { streamMode: "messages" },
     );
 

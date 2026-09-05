@@ -25,12 +25,21 @@ async function responseError(response, fallback) {
 function addMessage(role, content = "") {
   const article = document.createElement("article");
   article.className = `message ${role}`;
-  article.innerHTML = `<span class="avatar">${role === "user" ? "YOU" : "AI"}</span><div><small>${role === "user" ? "You" : "LangGraph assistant"}</small><p></p></div>`;
-  const paragraph = article.querySelector("p");
-  paragraph.textContent = content;
+  article.innerHTML = `<span class="avatar">${role === "user" ? "YOU" : "AI"}</span><div><small>${role === "user" ? "You" : "LangGraph assistant"}</small><div class="message-content"></div></div>`;
+  const contentElement = article.querySelector(".message-content");
+  renderMessageContent(contentElement, role, content);
   messagesElement.append(article);
   scrollMessagesToBottom();
-  return paragraph;
+  return contentElement;
+}
+
+function renderMessageContent(element, role, content) {
+  if (role === "assistant" && window.marked && window.DOMPurify) {
+    element.innerHTML = DOMPurify.sanitize(marked.parse(content));
+    return;
+  }
+
+  element.textContent = content;
 }
 
 function resetChat() {
@@ -131,11 +140,11 @@ form.addEventListener("submit", async (event) => {
       const { done, value } = await reader.read();
       if (done) break;
       assistantMessage += decoder.decode(value, { stream: true });
-      assistantParagraph.textContent = assistantMessage;
+      renderMessageContent(assistantParagraph, "assistant", assistantMessage);
       scrollMessagesToBottom();
     }
     assistantMessage += decoder.decode();
-    assistantParagraph.textContent = assistantMessage;
+    renderMessageContent(assistantParagraph, "assistant", assistantMessage);
     history.push({ role: "assistant", content: assistantMessage });
     await loadConversations();
   } catch (error) {

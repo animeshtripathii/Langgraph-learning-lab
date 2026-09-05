@@ -30,7 +30,15 @@ h2 { max-width: 620px; font-size: 22px; overflow: hidden; text-overflow: ellipsi
 .avatar { display: grid; flex: 0 0 34px; place-items: center; width: 34px; height: 34px; background: var(--black); color: var(--white); font-size: 10px; font-weight: 700; }
 .user .avatar { background: var(--white); border: 1px solid var(--black); color: var(--black); }
 small { color: var(--gray); font-size: 11px; font-weight: 700; }
-.message p { margin: 6px 0 0; line-height: 1.55; white-space: pre-wrap; }
+.message-content { margin-top: 6px; line-height: 1.55; }
+.message-content p { margin: 0 0 12px; }
+.message-content p:last-child { margin-bottom: 0; }
+.message-content h1, .message-content h2, .message-content h3 { margin: 0 0 10px; font-family: "Space Grotesk", sans-serif; font-size: 19px; }
+.message-content ul, .message-content ol { margin: 8px 0 12px; padding-left: 24px; }
+.message-content li { margin: 4px 0; }
+.message-content pre { margin: 12px 0; padding: 14px; overflow-x: auto; border: 1px solid var(--border); background: #f7f7f7; color: var(--black); font: 13px/1.5 Consolas, "Courier New", monospace; white-space: pre; }
+.message-content code { padding: 2px 4px; background: #eeeeee; font: 13px/1.4 Consolas, "Courier New", monospace; }
+.message-content pre code { padding: 0; background: transparent; }
 form { display: flex; gap: 12px; padding: 18px 34px 12px; border-top: 1px solid var(--black); }
 textarea { flex: 1; resize: none; min-height: 48px; max-height: 130px; padding: 14px 16px; border: 1px solid var(--border); outline: 0; background: var(--white); color: var(--black); }
 textarea:focus { border-color: var(--black); box-shadow: 0 0 0 2px var(--black); }
