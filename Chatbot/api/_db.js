@@ -3,12 +3,16 @@ import { createClient } from "@libsql/client";
 let client;
 let schemaPromise;
 
-function getClient() {
-  if (client) return client;
-
+export function assertDatabaseConfigured() {
   if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
     throw new Error("TURSO_DATABASE_URL and TURSO_AUTH_TOKEN are required.");
   }
+}
+
+function getClient() {
+  if (client) return client;
+
+  assertDatabaseConfigured();
 
   client = createClient({
     url: process.env.TURSO_DATABASE_URL,

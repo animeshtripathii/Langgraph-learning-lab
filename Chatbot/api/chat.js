@@ -1,7 +1,7 @@
 import { Annotation, END, START, StateGraph, messagesStateReducer } from "@langchain/langgraph";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { saveConversation } from "./_db.js";
+import { assertDatabaseConfigured, saveConversation } from "./_db.js";
 
 const chatState = Annotation.Root({
   messages: Annotation({
@@ -55,6 +55,13 @@ export default async function handler(request, response) {
     return;
   }
 
+  try {
+    assertDatabaseConfigured();
+  } catch (error) {
+    response.status(503).json({ error: error.message });
+    return;
+  }
+
   const body = request.body || {};
   const { messages, conversationId, title } = body;
 
@@ -66,10 +73,7 @@ export default async function handler(request, response) {
   try {
     const stream = await workflow.stream(
       { messages: messages.map(toMessage) },
-      {
-        configurable: { thread_id: String(threadId) },
-        streamMode: "messages",
-      },
+      { streamMode: "messages" },
     );
 
     response.status(200);

@@ -1,8 +1,15 @@
-import { listConversations } from "./_db.js";
+import { assertDatabaseConfigured, listConversations } from "./_db.js";
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     response.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  try {
+    assertDatabaseConfigured();
+  } catch (error) {
+    response.status(503).json({ error: error.message });
     return;
   }
 

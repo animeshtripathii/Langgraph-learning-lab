@@ -13,6 +13,15 @@ function scrollMessagesToBottom() {
   messagesElement.scrollTop = messagesElement.scrollHeight;
 }
 
+async function responseError(response, fallback) {
+  try {
+    const data = await response.json();
+    return data.error || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function addMessage(role, content = "") {
   const article = document.createElement("article");
   article.className = `message ${role}`;
@@ -70,14 +79,14 @@ function renderConversationList(conversations) {
 
 async function loadConversations() {
   const result = await fetch("/api/conversations");
-  if (!result.ok) throw new Error("Could not load conversation history.");
+  if (!result.ok) throw new Error(await responseError(result, "Could not load conversation history."));
   const data = await result.json();
   renderConversationList(data.conversations || []);
 }
 
 async function loadConversation(id) {
   const result = await fetch(`/api/conversation?id=${encodeURIComponent(id)}`);
-  if (!result.ok) throw new Error("Could not open that conversation.");
+  if (!result.ok) throw new Error(await responseError(result, "Could not open that conversation."));
   const { conversation } = await result.json();
   activeConversationId = conversation.id;
   activeTitle = conversation.title;
@@ -111,7 +120,7 @@ form.addEventListener("submit", async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ conversationId: activeConversationId, title: activeTitle, messages: history }),
     });
-    if (!result.ok) throw new Error(await result.text() || "Request failed");
+    if (!result.ok) throw new Error(await responseError(result, "Request failed"));
 
     const reader = result.body.getReader();
     const decoder = new TextDecoder();
