@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Codemon // AI Code Agent</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --accent: #a371f7;
+      --green: #238636;
+      --text: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    body { background-color: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: 1.1rem; font-weight: 700; color: var(--text-bright); display: flex; align-items: center; gap: 8px; }
+    .brand span { color: var(--accent); }
+    .status-badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid rgba(59, 185, 80, 0.3); }
+
+    .layout { display: flex; flex: 1; height: calc(100vh - 56px); }
+    .chat-panel { width: 420px; border-right: 1px solid var(--border); background: var(--panel); display: flex; flex-direction: column; }
+    .messages-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .msg { padding: 12px; border-radius: 8px; font-size: 0.88rem; line-height: 1.5; }
+    .msg.user { background: #1f242c; align-self: flex-end; border: 1px solid var(--border); color: var(--text-bright); max-width: 90%; }
+    .msg.agent { background: #0e1217; border: 1px solid var(--border); align-self: flex-start; max-width: 95%; border-left: 3px solid var(--accent); }
+    
+    .input-section { padding: 14px; border-top: 1px solid var(--border); background: var(--panel); }
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    input, textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text-bright); border-radius: 6px; padding: 10px; font-size: 0.85rem; outline: none; }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    button { background: var(--green); border: none; color: white; padding: 10px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
+    button:hover { filter: brightness(1.1); }
+    button:disabled { background: var(--border); cursor: not-allowed; }
+
+    .editor-panel { flex: 1; display: flex; flex-direction: column; background: #000; }
+    .editor-header { height: 42px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    .file-tab { font-size: 0.8rem; background: var(--bg); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border); color: var(--text-bright); }
+    .code-viewport { flex: 1; overflow: auto; padding: 16px; font-size: 0.88rem; line-height: 1.45; }
+    
+    .terminal-panel { height: 180px; border-top: 1px solid var(--border); background: #090c10; display: flex; flex-direction: column; }
+    .terminal-header { font-size: 0.75rem; text-transform: uppercase; color: #8b949e; padding: 6px 16px; border-bottom: 1px solid #1b1f24; font-weight: 600; }
+    .terminal-logs { flex: 1; overflow-y: auto; padding: 8px 16px; font-family: monospace; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px; }
+    .log-item { color: #8b949e; }
+    .log-item.success { color: #3fb950; }
+    .log-item.error { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">CODEMON <span>//</span> CODE RUNNER</div>
+    <div class="status-badge" id="statusBadge">Engine: Active</div>
+  </header>
+
+  <div class="layout">
+    <!-- Chat and input pane -->
+    <div class="chat-panel">
+      <div class="messages-container" id="chat">
+        <div class="msg agent">
+          <strong>Codemon Core</strong><br />
+          Ask any software question, algorithm problem, or file request. I synthesize code, verify it in an isolated child process sandbox, and write clean files to your workspace.
+        </div>
+      </div>
+
+      <div class="input-section">
+        <div class="input-group">
+          <input type="text" id="targetFile" placeholder="Target file (e.g. src/solver.py, leave blank to auto-detect)" />
+          <textarea id="promptInput" rows="3" placeholder="Describe the feature, write a problem, or paste an issue..."></textarea>
+          <button id="sendBtn" onclick="submitTask()">
+            <span>Execute Codemon</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code viewport and logs console -->
+    <div class="editor-panel">
+      <div class="editor-header">
+        <div class="file-tab" id="fileTab">No file loaded</div>
+        <div style="font-size: 0.75rem; color: #8b949e;" id="iterReadout">Iterations: 0</div>
+      </div>
+      <div class="code-viewport">
+        <pre><code id="codeBlock" class="language-python">// Validated generated source code will render here</code></pre>
+      </div>
+
+      <div class="terminal-panel">
+        <div class="terminal-header">Agent Execution Sandbox Logs</div>
+        <div class="terminal-logs" id="terminal">
+          <div class="log-item">System idle. Ready for tasks.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+  <script>
+    // Submit task to backend Express server
+    async function submitTask() {
+      const promptInput = document.getElementById("promptInput");
+      const targetFileInput = document.getElementById("targetFile");
+      const sendBtn = document.getElementById("sendBtn");
+      const chat = document.getElementById("chat");
+      const terminal = document.getElementById("terminal");
+
+      const prompt = promptInput.value.trim();
+      const targetFile = targetFileInput.value.trim();
+      if (!prompt) return;
+
+      // Render user message in UI
+      const userMsg = document.createElement("div");
+      userMsg.className = "msg user";
+      userMsg.textContent = prompt;
+      chat.appendChild(userMsg);
+      chat.scrollTop = chat.scrollHeight;
+
+      // Disable inputs during processing
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Processing...";
+      promptInput.value = "";
+      
+      terminal.innerHTML = '<div class="log-item">[INIT] Dispatching request to LangGraph runtime...</div>';
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, targetFile })
+        });
+
+        const data = await response.json();
+
+        // Render agent chat reply
+        const agentMsg = document.createElement("div");
+        agentMsg.className = "msg agent";
+        agentMsg.innerHTML = `<strong>Codemon Core</strong><br />${data.explanation || (data.isCodingQuery ? "Code generation complete." : "")}`;
+        chat.appendChild(agentMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+        // Render execution logs in terminal viewport
+        if (data.logs && data.logs.length > 0) {
+          terminal.innerHTML = "";
+          data.logs.forEach(log => {
+            const item = document.createElement("div");
+            item.className = log.includes("Error") || log.includes("failed") ? "log-item error" : "log-item success";
+            item.textContent = `> ${log}`;
+            terminal.appendChild(item);
+          });
+        }
+
+        // Highlight code in editor viewport
+        if (data.isCodingQuery && data.code) {
+          document.getElementById("fileTab").textContent = data.resolvedFile;
+          document.getElementById("iterReadout").textContent = `Iterations: ${data.iterations}`;
+          
+          const codeBlock = document.getElementById("codeBlock");
+          codeBlock.className = `language-${data.detectedLanguage}`;
+          codeBlock.textContent = data.code;
+          Prism.highlightElement(codeBlock);
+        }
+
+      } catch (err) {
+        const errItem = document.createElement("div");
+        errItem.className = "log-item error";
+        errItem.textContent = `[SYSTEM ERROR] ${err.message}`;
+        terminal.appendChild(errItem);
+      } finally {
+        // Re-enable form button
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = "<span>Execute Codemon</span>";
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "codemon",
+  "version": "1.0.0",
+  "description": "Autonomous self-healing coding agent powered by Gemini and LangGraph",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "codemon": "./cli.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "cli": "node cli.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/google-genai": "^0.1.0",
+    "@langchain/langgraph": "^0.2.0",
+    "commander": "^12.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
