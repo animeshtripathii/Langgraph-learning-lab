@@ -1,90 +1,51 @@
-# LangGraph Learning Journey
+# LangGraph Learning Lab & Agentic AI
 
-![Node.js](https://img.shields.io/badge/Node.js-Project-43853D?logo=node.js&logoColor=white)
-![Focus](https://img.shields.io/badge/Focus-LangGraph%20%26%20Agentic%20AI-1F6FEB)
-![Status](https://img.shields.io/badge/Status-Learning%20in%20Public-F59E0B)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-43853D?logo=node.js&logoColor=white)
+![LangGraph.js](https://img.shields.io/badge/LangGraph.js-Orchestration-1F6FEB)
+![Gemini API](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-8E75B2?logo=google&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Active%20Development-F59E0B)
 
-This repository documents my practical learning journey in **LangGraph** and **Agentic AI**.
+This repository documents my hands-on journey exploring **LangGraph.js**, state machines, and **Agentic AI** design patterns—moving from foundational sequential prompt chains to autonomous, self-healing coding agents.
 
-## Project Purpose
+---
 
-I am using this repo to:
-- Understand graph-based orchestration for LLM applications
-- Learn workflow design patterns (sequential first, then branching)
-- Explore agentic thinking: planning, decomposition, and execution
-- Build reusable JavaScript workflow components
+## Featured Project: Codemon (Autonomous Coding Daemon)
+
+An autonomous software engineering agent inspired by Cursor and GitHub Copilot Workspace. It synthesizes code, validates runtime execution in an isolated sandbox, automatically resolves errors via feedback loops, and writes clean files to your workspace.
+
+- **Self-Correction Loop:** Uses conditional edges to cycle `Coder -> Tester -> (Error? Coder : Writer)`.
+- **Sandbox Testing:** Evaluates scripts locally using isolated child processes (`python`, `node`, `g++`).
+- **Workspace File Commits:** Automatically creates nested directory structures (e.g., `src/algorithms/solver.py`) and writes validated code.
+- **Dual Interface:** Accessible via a dark-mode Web IDE UI or a global terminal CLI command.
+
+[Explore Codemon Source Code](./Agents/Codemon)
+
+---
 
 ## Learning Roadmap
 
-- Foundation: Sequential workflows and prompt chaining
-- Intermediate: State management and conditional transitions
-- Advanced: Tool use, memory, and multi-agent coordination
-- Production mindset: Evaluation, debugging, and reliability
+- [x] **Foundation:** Sequential workflows, prompt chaining, and token streaming
+- [x] **Full-Stack Agent UI:** Connecting LangGraph execution nodes to real-time browser interfaces
+- [x] **Self-Healing Loops:** State management with `Annotation.Root`, child-process sandboxing, and conditional retries
+- [x] **Tooling & CLI:** Packaging agents into globally executable developer CLI binaries
+- [ ] **Context & Retrieval (RAG):** AST parsing, directory tree ingestion, and repository-wide context
+- [ ] **Persistence & Memory:** Thread management, checkpointing, and session retention via `MemorySaver`
+- [ ] **Multi-Agent Coordination:** Supervisor and worker patterns for complex refactoring
+
+---
 
 ## Repository Structure
 
-- `Workflows/` - Workflow experiments and implementations
-- `package.json` - Project metadata, dependencies, and scripts
-- `.github/workflows/ci.yml` - CI pipeline for push and pull request checks
-- `COMMIT_CONVENTION.md` - Commit message style guide
-
-## Quick Start
-
-### 1) Install dependencies
-
-```bash
-npm install
-```
-
-### 2) Run a workflow file
-
-Use Node.js directly for any workflow file:
-
-```bash
-node Workflows/sequential.js
-```
-
-or
-
-```bash
-node Workflows/LLM_Squential_workflow.js
-```
-
-## Current Focus
-
-- Sequential workflow design
-- LLM-driven step-by-step execution
-- Clean code structure for future graph expansion
-
-## Next Milestones
-
-- Add stateful graph examples
-- Add branching and conditional routing
-- Add memory and tool-usage patterns
-- Document workflow inputs, outputs, and edge cases
-
-## Weekly Learning Log Template
-
-Use this section to keep a visible record of progress.
-
-### Week 1
-- Topics learned:
-- What I built:
-- Challenges faced:
-- Fixes/insights:
-- Next week plan:
-
-### Week 2
-- Topics learned:
-- What I built:
-- Challenges faced:
-- Fixes/insights:
-- Next week plan:
-
-## Long-Term Vision
-
-This repository is both:
-- A hands-on experimentation space
-- A structured growth log toward building robust agentic systems
-
-Over time, this will evolve from simple workflows to advanced, reliable LangGraph architectures.
+```text
+├── Agents/
+│   └── Codemon/            # Autonomous code-writing & self-healing agent (CLI + Web UI)
+│       ├── cli.mjs         # Global executable CLI entry point
+│       ├── server.js       # Backend Express API & LangGraph runner
+│       ├── public/         # Dark-mode IDE frontend (index.html)
+│       └── package.json
+├── Workflows/              # Foundational LangGraph workflow experiments
+│   ├── sequential.js       # Basic node-to-node sequential flow
+│   └── LLM_Squential_workflow.js
+├── .github/workflows/ci.yml# CI pipeline
+├── COMMIT_CONVENTION.md    # Commit message standards
+└── package.json            # Root configuration
